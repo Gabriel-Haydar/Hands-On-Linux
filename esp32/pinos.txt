@@ -1,0 +1,14 @@
+ESP32 DevKit V1 (38 pinos) — Projeto SmartLamp
+
+LED
+- GPIO: 22
+- Resistor: 220Ω em série com o LED
+- Catodo do LED ligado ao GND
+
+LDR (sensor de luz)
+- LDR ligado entre 3.3V e GPIO36
+- Resistor de 1kΩ ligado entre GPIO36 e GND (forma um divisor de tensão)
+
+Observações:
+- O PWM é aplicado no GPIO22 usando ledcWrite().
+- O LDR usa leitura analógica no GPIO36 com resolução de 12 bits.
