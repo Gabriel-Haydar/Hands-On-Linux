@@ -15,8 +15,8 @@ static uint usb_in, usb_out;                       // Endereços das portas de e
 static char *usb_in_buffer, *usb_out_buffer;       // Buffers de entrada e saída da USB
 static int usb_max_size;                           // Tamanho máximo de uma mensagem USB
 
-#define VENDOR_ID   SUBSTITUA_PELO_VENDORID /* Encontre o VendorID  do smartlamp */
-#define PRODUCT_ID  SUBSTITUA_PELO_PRODUCTID /* Encontre o ProductID do smartlamp */
+#define VENDOR_ID   0x10c4 /* Encontre o VendorID  do smartlamp */
+#define PRODUCT_ID  0xea60 /* Encontre o ProductID do smartlamp */
 static const struct usb_device_id id_table[] = { { USB_DEVICE(VENDOR_ID, PRODUCT_ID) }, {} };
 
 static int  usb_probe(struct usb_interface *ifce, const struct usb_device_id *id); // Executado quando o dispositivo é conectado na USB
@@ -51,6 +51,7 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     usb_in_buffer = kmalloc(usb_max_size, GFP_KERNEL);
     usb_out_buffer = kmalloc(usb_max_size, GFP_KERNEL);
 
+    msleep(1000);
     LDR_value = usb_read_serial();
 
     printk("LDR Value: %d\n", LDR_value);
@@ -58,32 +59,55 @@ static int usb_probe(struct usb_interface *interface, const struct usb_device_id
     return 0;
 }
 
-// Executado quando o dispositivo USB é desconectado da USB
 static void usb_disconnect(struct usb_interface *interface) {
     printk(KERN_INFO "SmartLamp: Dispositivo desconectado.\n");
-    kfree(usb_in_buffer);                   // Desaloca buffers
+    kfree(usb_in_buffer);                   
     kfree(usb_out_buffer);
 }
 
 static int usb_read_serial() {
     int ret, actual_size;
-    int retries = 10;                       // Tenta algumas vezes receber uma resposta da USB. Depois desiste.
+    int retries = 10;
+    static char response_buffer[MAX_RECV_LINE]; 
+    int total_received = 0;
 
-    // Espera pela resposta correta do dispositivo (desiste depois de várias tentativas)
+    memset(response_buffer, 0, sizeof(response_buffer));
+
     while (retries > 0) {
-        // Lê os dados da porta serial e armazena em usb_in_buffer
-            // usb_in_buffer - contem a resposta em string do dispositivo
-            // actual_size - contem o tamanho da resposta em bytes
-        ret = usb_bulk_msg(smartlamp_device, usb_rcvbulkpipe(smartlamp_device, usb_in), usb_in_buffer, min(usb_max_size, MAX_RECV_LINE), &actual_size, 1000);
+        ret = usb_bulk_msg(smartlamp_device, usb_rcvbulkpipe(smartlamp_device, usb_in),
+                          usb_in_buffer, min(usb_max_size, MAX_RECV_LINE), &actual_size, 1500);
+
         if (ret) {
-            printk(KERN_ERR "SmartLamp: Erro ao ler dados da USB (tentativa %d). Codigo: %d\n", ret, retries--);
+            printk(KERN_ERR "SmartLamp: Erro ao ler dados (tentativa %d/10). Código: %d\n", 
+                   (11 - retries), ret);
+            retries--;
             continue;
         }
 
-        //caso tenha recebido a mensagem 'RES_LDR X' via serial acesse o buffer 'usb_in_buffer' e retorne apenas o valor da resposta X
-        //retorne o valor de X em inteiro
-        return 0;
+        if (total_received + actual_size < MAX_RECV_LINE) {
+            memcpy(response_buffer + total_received, usb_in_buffer, actual_size);
+            total_received += actual_size;
+            response_buffer[total_received] = '\0'; 
+        }
+
+        if (strchr(response_buffer, '\n') || strchr(response_buffer, '\r')) {
+            break;
+        }
     }
 
-    return -1; 
+    if (total_received > 0) {
+        char *start_ptr = strstr(response_buffer, "RES GET_LDR");
+        int valor;
+
+        if (start_ptr && sscanf(start_ptr, "RES GET_LDR %d", &valor) == 1) {
+            printk(KERN_INFO "SmartLamp: Valor do LDR recebido foi esse aqui: %d\n", valor);
+            return valor;
+        } else {
+            printk(KERN_ERR "SmartLamp: erro. Resposta: [%s]\n", response_buffer);
+            return -EINVAL;
+        }
+    }
+
+    printk(KERN_ERR "SmartLamp: Nenhum dado válido recebido após 10 tentativas\n");
+    return -ETIMEDOUT;
 }

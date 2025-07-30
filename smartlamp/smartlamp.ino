@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 #include <Arduino.h>
 #include <DHTesp.h>
 
@@ -16,15 +17,22 @@ int ldrMax = 4095;
 int ledValue = 10;
 
 //Configurando PWM
+=======
+int ledPin = 22;
+int ledValue = 10;
+
+int ldrPin = 34;
+int ldrMax = 4095;
+
+>>>>>>> Stashed changes
 const int pwmFreq = 5000;
-const int pwmChannel = 0;
 const int pwmResolution = 8;
-int brightness = 0;
 
 // Objeto para manipular sensor DHT
 DHTesp dht;
 
 void setup() {
+<<<<<<< Updated upstream
     Serial.begin(baudrate);
     pinMode(LED_PIN, OUTPUT);
     pinMode(LDR_PIN, INPUT);
@@ -34,22 +42,33 @@ void setup() {
     analogReadResolution(12);
     dht.setup(DHT_PIN, DHTesp::DHT22);
     Serial.printf("SmartLamp Initialized.\n");
+=======
+    Serial.begin(9600);
+    
+    //ledcAttach(ledPin, pwmFreq, pwmResolution); nós achamos precisava
+    
+    pinMode(ldrPin, INPUT);
+    pinMode(ledPin, OUTPUT);
+    
+    ledUpdate();
+>>>>>>> Stashed changes
 }
 
-// Função loop será executada infinitamente pelo ESP32
 void loop() {
-    //Obtenha os comandos enviados pela serial 
-    //e processe-os com a função processCommand
-    if(Serial.available() > 0) {
-      String command = Serial.readStringUntil('\n');
-      command.trim(); // Remove espaços e quebras de linha
-      processCommand(command);
+    if (Serial.available() > 0) {
+        String command = Serial.readStringUntil('\n');
+        command.trim();
+        
+        if (command.length() > 0) {
+            processCommand(command);
+        }
     }
-    delay(100);
-}
 
+    processCommand("GET_LDR");
+}
 
 void processCommand(String command) {
+<<<<<<< Updated upstream
     // compare o comando com os comandos possíveis e execute a ação correspondente
     if (command.startsWith("SET_LED")) {
       String valueStr = command.substring(command.indexOf(' ') + 1);
@@ -75,21 +94,46 @@ void processCommand(String command) {
       float hum = dht.getHumidity();
       Serial.print("RES GET_HUM ");
       Serial.println(hum);
-    } else {
-      Serial.println("ERR Unknown command");
-    }
-}       
+=======
+    int spaceIndex = command.indexOf(' ');
+    String cmd, valueStr;
+    int value = 0;
 
-// Função para atualizar o valor do LED
-void ledUpdate() {
-  // Valor deve convertar o valor recebido pelo comando SET_LED para 0 e 255
-  // Normalize o valor do LED antes de enviar para a porta correspondente
-  int dutyCycle  = map(brightness, 0, 100, 0, 255);
-  ledcWrite(pwmChannel, dutyCycle);
+    if (spaceIndex != -1) {
+        cmd = command.substring(0, spaceIndex);
+        valueStr = command.substring(spaceIndex + 1);
+        value = valueStr.toInt();
+>>>>>>> Stashed changes
+    } else {
+        cmd = command;
+    }
+
+    if (cmd == "SET_LED") {
+        if (value >= 0 && value <= 100) {
+            ledValue = value;
+            ledUpdate();
+            Serial.println("RES SET_LED 1");
+        } else {
+            Serial.println("RES SET_LED -1");
+        }
+    } else if (cmd == "GET_LED") {
+        Serial.print("RES GET_LED ");
+        Serial.println(ledValue);
+    } else if (cmd == "GET_LDR") {
+        int ldrValue = ldrGetValue();
+        Serial.println("RES GET_LDR " + String(ldrValue));
+    } else {
+        Serial.println("ERR Unknown command.");
+    }
 }
 
-// Função para ler o valor do LDR
+void ledUpdate() {
+    int pwmValue = map(ledValue, 0, 100, 0, 255);
+    analogWrite(ledPin, pwmValue);
+}
+
 int ldrGetValue() {
+<<<<<<< Updated upstream
     // Leia o sensor LDR e retorne o valor normalizado entre 0 e 100
     // faça testes para encontrar o valor maximo do ldr (exemplo: aponte a lanterna do celular para o sensor)       
     // Atribua o valor para a variável ldrMax e utilize esse valor para a normalização
@@ -97,3 +141,11 @@ int ldrGetValue() {
   int normalized = map(raw, 0, ldrMax, 0, 100);
   return constrain(normalized, 0, 100);
 }
+=======
+    int rawValue = analogRead(ldrPin);
+    int normalizedValue = map(rawValue, 0, ldrMax, 0, 100);
+    if (normalizedValue > 100) normalizedValue = 100;
+    if (normalizedValue < 0) normalizedValue = 0;
+    return normalizedValue;
+}
+>>>>>>> Stashed changes

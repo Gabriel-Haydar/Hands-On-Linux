@@ -1,4 +1,4 @@
-obj-m += probe.o
+obj-m += smartlamp.o
 PWD := $(CURDIR)
 OUTDIR := $(PWD)/build
 
