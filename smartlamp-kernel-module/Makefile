@@ -1,4 +1,4 @@
-obj-m += smartlamp.o
+obj-m += sysfs_temp_hum.o
 PWD := $(CURDIR)
 OUTDIR := $(PWD)/build
 
