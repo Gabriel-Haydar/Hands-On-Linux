@@ -1,6 +1,6 @@
 
 
-# DevTITANS 05 - HandsOn Linux - Equipe 03
+# DevTITANS 07 - HandsOn Linux - Equipe 03
 
 Bem-vindo ao repositório da Equipe 03 do HandsON de Linux do DevTITANS! Este projeto contém um firmware para o ESP32 escrito em formato Arduino `.ino`, bem como um driver do kernel Linux escrito em C. O objetivo é demonstrar como criar uma solução completa de hardware e software que integra um dispositivo ESP32 com um sistema Linux.
 
