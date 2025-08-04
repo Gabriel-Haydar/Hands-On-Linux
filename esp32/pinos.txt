@@ -6,9 +6,9 @@ LED
 - Catodo do LED ligado ao GND
 
 LDR (sensor de luz)
-- LDR ligado entre 3.3V e GPIO36
-- Resistor de 1kΩ ligado entre GPIO36 e GND (forma um divisor de tensão)
+- LDR ligado entre 3.3V e GPIO34
+- Resistor de 10kΩ ligado entre GPIO34 e GND (forma um divisor de tensão)
 
 Observações:
 - O PWM é aplicado no GPIO22 usando ledcWrite().
-- O LDR usa leitura analógica no GPIO36 com resolução de 12 bits.
+- O LDR usa leitura analógica no GPIO34 com resolução de 12 bits.
