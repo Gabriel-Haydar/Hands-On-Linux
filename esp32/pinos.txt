@@ -12,3 +12,8 @@ LDR (sensor de luz)
 Observações:
 - O PWM é aplicado no GPIO22 usando ledcWrite().
 - O LDR usa leitura analógica no GPIO34 com resolução de 12 bits.
+
+
+DHT11:
+- GPIO: 04
+- Resistor 10kΩ
